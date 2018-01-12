@@ -1,1 +1,1 @@
-"# ALM Octane Plugin" 
+# ALM Octane Plugin

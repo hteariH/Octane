@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <header>
+    <identifier version="1" id="com.urbancode.air.plugin.Octane" name="Octane"/>
+    <description>The ALM Octane plugin enables you to create and update ALM Octane work items (defects/stories) as part of your deployment process.</description>
+    <tag>Issue Tracking/ALM Octane Plugin</tag>
+  </header>
+  <!-- ==================================== -->
+  <!--  Add Comments                        -->
+  <!-- ==================================== -->
+  <step-type name="Add Comments">
+    <description>Add comments to matching ALM Octane work items.</description>
+    <properties>
+      <property name="wiIds" required="true">
+        <property-ui type="textAreaBox" label="Work Item IDs" default-value="${p:version/octane.wiIds}" description="A comma-separated list of work item IDs to update."/>
+      </property>
+      <property name="commentBody" required="true">
+        <property-ui type="textAreaBox" label="Comment" default-value="Deployment Automation found this work item referenced in a deployment" description="The template to use for adding a comment to Octane work items."/>
+      </property>
+      <property name="commentAuthor">
+        <property-ui type="textBox" label="Comment Author" description="The id of the user to create comments as, leave blank to use the API user."/>
+      </property>
+      <property name="failMode" required="true">
+        <property-ui type="selectBox" label="Fail Mode" description="What to do when an unknown work item ID is found."/>
+        <value label="Warn Only">WARN_ONLY</value>
+        <value label="Fail Fast">FAIL_FAST</value>
+        <value label="Fail on No Updates">FAIL_ON_NO_UPDATES</value>
+      </property>
+      <property name="serverUrl" required="true">
+        <property-ui type="textBox" default-value="${p:system/octane.serverUrl}" label="Octane Server URL" description="The Octane server URL, e.g. http://localhost:8080"/>
+      </property>
+      <property name="clientId">
+        <property-ui type="textBox" default-value="${p:system/octane.clientId}" label="Octane Client Id" description="The API client id to be used to connect to the Octane server."/>
+      </property>
+      <property name="password">
+        <property-ui type="secureBox" default-value="${p:system/octane.clientSecret}" label="Octane Client Secret" description="The API client secret to be used to connect to the Octane server."/>
+      </property>
+      <property name="sharedSpaceId">
+        <property-ui type="textBox" default-value="${p:application/octane.sharedSpaceId}" label="Octane Shared Space Id" description="The id of the shared space to be used on Octane server."/>
+      </property>
+      <property name="workSpaceId">
+        <property-ui type="textBox" default-value="${p:application/octane.workSpaceId}" label="Octane Work Space Id" description="The id of the work space to be used on Octane server."/>
+      </property>
+      <property name="debugMode" required="false">
+        <property-ui type="checkBox" label="Debug Output" hidden="true"
+                     description="Select this option to display debug output during execution."/>
+      </property>
+    </properties>
+    <post-processing><![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put(new java.lang.String("Status"), new java.lang.String("Failure"));
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]></post-processing>
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/*"/>
+      <arg file="add_comments.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+  <!-- ==================================== -->
+  <!--  Create Work Item                    -->
+  <!-- ==================================== -->
+  <step-type name="Create Work Item">
+    <description>Create a new work item.</description>
+    <properties>
+      <property name="type" required="true">
+        <property-ui type="selectBox" label="Work Item Type" description="The type of work item to create."/>
+        <value label="Defect">DEFECT</value>
+        <value label="User Story">STORY</value>
+      </property>
+      <property name="name" required="true">
+        <property-ui type="textBox" label="Name" description="The name of the work item to create."/>
+      </property>
+      <property name="description" required="true">
+        <property-ui type="textAreaBox" label="Description" description="A detailed description of the work item."/>
+      </property>
+      <property name="parentType">
+        <property-ui type="textBox" default-value="work_item_root" label="Parent Type" description="The parent type for the work item, defaults to 'work_item_root'."/>
+      </property>
+      <property name="parentId">
+        <property-ui type="textBox" label="Parent Id" description="If not the 'work_item_root' then the id of the parent to create the work item under."/>
+      </property>
+      <property name="productAreas" required="true">
+        <property-ui type="textAreaBox" label="Product Area IDs" default-value="${p:application/octane.productAreaIds}" description="A comma-separated list of product area IDs to associate the work item to."/>
+      </property>
+      <property name="releaseId">
+        <property-ui type="textBox" label="Release Id" description="The id of the release to associate the work item to."/>
+      </property>
+      <property name="severityId">
+        <property-ui type="textBox" label="Severity Id" description="The id of the severity to create the work item as, e.g. 'list_node.severity.high'."/>
+      </property>
+      <property name="serverUrl" required="true">
+        <property-ui type="textBox" default-value="${p:system/octane.serverUrl}" label="Octane Server URL" description="The Octane server URL, e.g. http://localhost:8080"/>
+      </property>
+      <property name="clientId">
+        <property-ui type="textBox" default-value="${p:system/octane.clientId}" label="Octane Client Id" description="The API client id to be used to connect to the Octane server."/>
+      </property>
+      <property name="password">
+        <property-ui type="secureBox" default-value="${p:system/octane.clientSecret}" label="Octane Client Secret" description="The API client secret to be used to connect to the Octane server."/>
+      </property>
+      <property name="sharedSpaceId">
+        <property-ui type="textBox" default-value="${p:application/octane.sharedSpaceId}" label="Octane Shared Space Id" description="The id of the shared space to be used on Octane server."/>
+      </property>
+      <property name="workSpaceId">
+        <property-ui type="textBox" default-value="${p:application/octane.workSpaceId}" label="Octane Work Space Id" description="The id of the work space to be used on Octane server."/>
+      </property>
+      <property name="debugMode" required="false">
+        <property-ui type="checkBox" label="Debug Output" hidden="true"
+                     description="Select this option to display debug output during execution."/>
+      </property>
+    </properties>
+    <post-processing><![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put(new java.lang.String("Status"), new java.lang.String("Failure"));
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]></post-processing>
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/*"/>
+      <arg file="create_work_item.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+  <!-- ==================================== -->
+  <!--  Update Work Item                    -->
+  <!-- ==================================== -->
+  <step-type name="Update Work Item">
+    <description>Update the status of matching ALM Octane work items, adding comments if required.</description>
+    <properties>
+      <property name="wiIds" required="true">
+        <property-ui type="textAreaBox" label="Work Item IDs" default-value="${p:version/octane.wiIds}" description="A comma-separated list of work item IDs to update."/>
+      </property>
+      <property name="phaseName">
+        <property-ui type="textBox" label="Phase Name" default-value="phase-defect.close" description="The id of the phase to set the work items to, e.g. 'phase.defect.closed'."/>
+      </property>
+      <property name="commentBody" required="true">
+        <property-ui type="textAreaBox" label="Comment" default-value="Deployment Automation found this work item referenced in a deployment" description="The template to use for adding a comment to Octane work items."/>
+      </property>
+      <property name="commentAuthor">
+        <property-ui type="textBox" label="Comment Author" description="The id of the user to create comments as, leave blank to create the comment as the API user."/>
+      </property>
+      <property name="failMode" required="true">
+        <property-ui type="selectBox" label="Fail Mode" description="What to do when an unknown work item ID is found."/>
+        <value label="Warn Only">WARN_ONLY</value>
+        <value label="Fail Fast">FAIL_FAST</value>
+        <value label="Fail on No Updates">FAIL_ON_NO_UPDATES</value>
+      </property>
+      <property name="serverUrl" required="true">
+        <property-ui type="textBox" default-value="${p:system/octane.serverUrl}" label="Octane Server URL" description="The Octane server URL, e.g. http://localhost:8080"/>
+      </property>
+      <property name="clientId">
+        <property-ui type="textBox" default-value="${p:system/octane.clientId}" label="Octane Client Id" description="The API client id to be used to connect to the Octane server."/>
+      </property>
+      <property name="password">
+        <property-ui type="secureBox" default-value="${p:system/octane.clientSecret}" label="Octane Client Secret" description="The API client secret to be used to connect to the Octane server."/>
+      </property>
+      <property name="sharedSpaceId">
+        <property-ui type="textBox" default-value="${p:application/octane.sharedSpaceId}" label="Octane Shared Space Id" description="The id of the shared space to be used on Octane server."/>
+      </property>
+      <property name="workSpaceId">
+        <property-ui type="textBox" default-value="${p:application/octane.workSpaceId}" label="Octane Work Space Id" description="The id of the work space to be used on Octane server."/>
+      </property>
+      <property name="debugMode" required="false">
+        <property-ui type="checkBox" label="Debug Output" hidden="true"
+                     description="Select this option to display debug output during execution."/>
+      </property>
+    </properties>
+    <post-processing><![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put(new java.lang.String("Status"), new java.lang.String("Failure"));
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]></post-processing>
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/*"/>
+      <arg file="update_work_item.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+  <!-- ==================================== -->
+  <!--  Check Status                        -->
+  <!-- ==================================== -->
+  <step-type name="Check Status">
+    <description>Check the status of ALM Octane work items.</description>
+    <properties>
+      <property name="wiIds" required="true">
+        <property-ui type="textAreaBox" label="Work Item IDs" default-value="${p:version/octane.wiIds}" description="A comma-separated list of work item IDs to check the status of."/>
+      </property>
+      <property name="phaseName" required="true">
+        <property-ui type="textBox" label="Phase Name" default-value="phase.defect.closed" description="The status/phase name of work items to check for."/>
+      </property>
+      <property name="failMode" required="true">
+        <property-ui type="selectBox" label="Fail Mode" description="What to do when an unknown work item ID is found."/>
+        <value label="Warn Only">WARN_ONLY</value>
+        <value label="Fail Fast">FAIL_FAST</value>
+        <value label="Fail on No Updates">FAIL_ON_NO_UPDATES</value>
+      </property>
+      <property name="serverUrl" required="true">
+        <property-ui type="textBox" default-value="${p:system/octane.serverUrl}" label="Octane Server URL" description="The Octane server URL, e.g. http://localhost:8080"/>
+      </property>
+      <property name="clientId">
+        <property-ui type="textBox" default-value="${p:system/octane.clientId}" label="Octane Client Id" description="The API client id to be used to connect to the Octane server."/>
+      </property>
+      <property name="password">
+        <property-ui type="secureBox" default-value="${p:system/octane.clientSecret}" label="Octane Client Secret" description="The API client secret to be used to connect to the Octane server."/>
+      </property>
+      <property name="sharedSpaceId">
+        <property-ui type="textBox" default-value="${p:application/octane.sharedSpaceId}" label="Octane Shared Space Id" description="The id of the shared space to be used on Octane server."/>
+      </property>
+      <property name="workSpaceId">
+        <property-ui type="textBox" default-value="${p:application/octane.workSpaceId}" label="Octane Work Space Id" description="The id of the work space to be used on Octane server."/>
+      </property>
+      <property name="debugMode" required="false">
+        <property-ui type="checkBox" label="Debug Output" hidden="true"
+                     description="Select this option to display debug output during execution."/>
+      </property>
+    </properties>
+    <post-processing><![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put(new java.lang.String("Status"), new java.lang.String("Failure"));
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]></post-processing>
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/*"/>
+      <arg file="check_status.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+  <!-- ==================================== -->
+  <!--  Publish Work Item Report            -->
+  <!-- ==================================== -->
+  <step-type name="Publish Work Item Report">
+    <description>Create a report of ALM Octane work items.</description>
+    <properties>
+      <property name="wiIds" required="true">
+        <property-ui type="textAreaBox" label="Work Item IDs" default-value="${p:version/octane.wiIds}" description="A comma-separated list of work item IDs to add in the report."/>
+      </property>
+      <property name="outputFile" required="true">
+        <property-ui type="textBox" label="Output File" description="The file to output the report to."/>
+      </property>
+      <property name="serverUrl" required="true">
+        <property-ui type="textBox" default-value="${p:system/octane.serverUrl}" label="Octane Server URL" description="The Octane server URL, e.g. http://localhost:8080"/>
+      </property>
+      <property name="clientId">
+        <property-ui type="textBox" default-value="${p:system/octane.clientId}" label="Octane Client Id" description="The API client id to be used to connect to the Octane server."/>
+      </property>
+      <property name="password">
+        <property-ui type="secureBox" default-value="${p:system/octane.clientSecret}" label="Octane Client Secret" description="The API client secret to be used to connect to the Octane server."/>
+      </property>
+      <property name="sharedSpaceId">
+        <property-ui type="textBox" default-value="${p:application/octane.sharedSpaceId}" label="Octane Shared Space Id" description="The id of the shared space to be used on Octane server."/>
+      </property>
+      <property name="workSpaceId">
+        <property-ui type="textBox" default-value="${p:application/octane.workSpaceId}" label="Octane Work Space Id" description="The id of the work space to be used on Octane server."/>
+      </property>
+      <property name="debugMode" required="false">
+        <property-ui type="checkBox" label="Debug Output" hidden="true"
+                     description="Select this option to display debug output during execution."/>
+      </property>
+    </properties>
+    <post-processing><![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put(new java.lang.String("Status"), new java.lang.String("Failure"));
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]></post-processing>
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/*"/>
+      <arg file="work_item_report.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+</plugin>
